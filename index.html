@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis Financiero - Examen Inicial</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Jarvis Financiero</h1>
+        <p>Completa tu perfil financiero para generar tu plan maestro personalizado.</p>
+
+        <form id="financialForm">
+            <h2>Examen Inicial - Tu Perfil Financiero</h2>
+
+            <label>¿Cuánto ganas al mes?</label>
+            <input type="number" id="income" required><br>
+
+            <label>¿Cuánto gastas al mes?</label>
+            <input type="number" id="expenses" required><br>
+
+            <label>¿Tienes deudas? ¿Cuánto?</label>
+            <input type="text" id="debts"><br>
+
+            <label>¿Cuáles son tus metas financieras?</label>
+            <textarea id="goals" required></textarea><br>
+
+            <label>¿Cuáles son tus habilidades, talentos o intereses?</label>
+            <textarea id="skills" required></textarea><br>
+
+            <button type="submit">Generar Plan Maestro</button>
+        </form>
+
+        <div class="loading" id="loading" style="display: none;">Cargando...</div>
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:5000';
+
+        async function callApi(endpoint, data) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').textContent = '';
+            try {
+                const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Error al llamar a la API:', error);
+                document.getElementById('results').textContent = `Error: ${error.message}. Asegúrate de que el servidor esté corriendo.`;
+                return null;
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        document.getElementById('financialForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                income: document.getElementById('income').value,
+                expenses: document.getElementById('expenses').value,
+                debts: document.getElementById('debts').value,
+                goals: document.getElementById('goals').value,
+                skills: document.getElementById('skills').value,
+            };
+
+            const response = await callApi('generate_plan', data);
+            if (response && response.plan) {
+                document.getElementById('results').textContent = response.plan;
+            }
+        });
+    </script>
+</body>
+</html>
